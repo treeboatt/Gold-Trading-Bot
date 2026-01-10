@@ -1,9 +1,9 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
+import joblib
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
-from preparation_data import ajouter_indicateurs
-from collect_data import telecharger_donnees
+from src.preparation_data import ajouter_indicateurs
+from src.collect_data import telecharger_donnees
 
 def entrainer_modele():
     df_raw = telecharger_donnees()
@@ -12,15 +12,20 @@ def entrainer_modele():
 
     df = ajouter_indicateurs(df_raw)
 
-    features = ['Returns', 'SMA_15', 'SMA_60', 'Volatilite']
+    features = [
+        'Returns_OR', 'Returns_SP500', 'Returns_BTC',
+        'Dist_SMA_15', 'Dist_SMA_60', 'RSI', 
+        'Volatilite', 'Corr_OR_SP500', 'Corr_OR_BTC'
+    ]
+    
     X = df[features]
     y = df['Target']
 
-    split_index = int(len(df) * 0.8)
+    split_index = int(len(df) * 0.85)
     X_train, X_test = X.iloc[:split_index], X.iloc[split_index:]
     y_train, y_test = y.iloc[:split_index], y.iloc[split_index:]
 
-    model = RandomForestClassifier(n_estimators=100, min_samples_split=10, random_state=42)
+    model = RandomForestClassifier(n_estimators=300, min_samples_split=10, max_depth=15, random_state=42)
     model.fit(X_train, y_train)
 
     predictions = model.predict(X_test)
@@ -29,6 +34,9 @@ def entrainer_modele():
     print(f"Précision du modèle : {accuracy:.2f}")
     print("\nRapport de classification :")
     print(classification_report(y_test, predictions))
+
+    joblib.dump(model, 'models/modele_or.pkl')
+    print("Modèle sauvegardé sous 'models/modele_or.pkl'")
 
     return model
 
