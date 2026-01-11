@@ -5,8 +5,8 @@ Contient les identifiants de connexion et les paramètres de risque
 
 # ===== IDENTIFIANTS METATRADER 5 =====
 # Remplacez ces valeurs par vos propres identifiants
-MT5_LOGIN = 12345678  # Votre numéro de compte MT5
-MT5_PASSWORD = "votre_mot_de_passe"  # Votre mot de passe
+MT5_LOGIN = 101181033  # Votre numéro de compte MT5
+MT5_PASSWORD = "5gW!FgVi"  # Votre mot de passe
 MT5_SERVER = "Broker-Server"  # Exemple: "MetaQuotes-Demo", "ICMarkets-Demo", etc.
 
 # ===== SYMBOLES DE TRADING =====

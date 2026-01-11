@@ -1,0 +1,1 @@
+timestamp;symbol;action;entry_price;exit_price;volume;stop_loss;take_profit;profit;profit_pct;exit_reason;duration_minutes;price;ema_short;ema_long;atr;atr_pct;rsi;sp500_price;sp500_change_1d_pct;sp500_weak;vix_value;vix_high;gold_btc_corr;gold_sp500_corr;correlation_decoupled;balance;equity;margin_used;drawdown_pct;spread_cost;commission;total_costs;net_profit

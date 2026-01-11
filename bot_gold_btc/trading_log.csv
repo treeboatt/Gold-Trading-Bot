@@ -1,0 +1,2 @@
+Timestamp;Type;Symbole;Action;Prix;Volume;Stop_Loss;Take_Profit;Message;Balance;Equity
+2026-01-11 22:04:16;ERROR;;;;;;;Échec de connexion au compte MT5: (-10005, 'IPC timeout');;
