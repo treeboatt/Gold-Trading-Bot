@@ -1,20 +1,13 @@
-"""
-Bot de Statistical Arbitrage (Pairs Trading) automatisé
-Système robuste pour VPS avec reconnexion automatique + NOTIFICATIONS TELEGRAM
-"""
-
 import time
 import sys
 import signal
 from datetime import datetime
 import traceback
-import requests  # <--- AJOUT CRUCIAL
-
+import requests
 import MetaTrader5 as mt5
 
-# --- CONFIGURATION TELEGRAM (À REMPLIR) ---
-TELEGRAM_TOKEN = "8390637051:AAH03kUKFrNrRWeH7GCGLpk_AL8CI7TXVr4"  # <--- METS TON TOKEN @BotFather ICI
-TELEGRAM_CHAT_ID = "7617748614"   # <--- METS TON ID @userinfobot ICI
+TELEGRAM_TOKEN = "8390637051:AAH03kUKFrNrRWeH7GCGLpk_AL8CI7TXVr4"
+TELEGRAM_CHAT_ID = "7617748614"
 
 try:
     from .config import (
@@ -40,7 +33,6 @@ except ImportError:
 logger = TradingLogger()
 
 class PairsTradingBot:
-    """Bot de pairs trading avec reconnexion automatique et Telegram"""
     
     def __init__(self):
         self.mt5_interface = MT5Interface()
@@ -53,11 +45,9 @@ class PairsTradingBot:
         self.consecutive_errors = 0
         self.max_consecutive_errors = 10
 
-    # --- NOUVELLE FONCTION TELEGRAM ---
     def send_telegram(self, message):
-        """Envoie une alerte sur Telegram"""
         if "COLLE_TON" in TELEGRAM_TOKEN:
-            return # Pas de token configuré
+            return
             
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
         payload = {
@@ -71,14 +61,12 @@ class PairsTradingBot:
             logger.log_error(f"Erreur envoi Telegram : {e}")
 
     def signal_handler(self, signum, frame):
-        """Gère l'arrêt propre du bot (Ctrl+C)"""
         print("\n🛑 Arrêt du bot demandé...")
         self.send_telegram("🛑 **Bot Arbitrage Arrêté manuellement**")
         self.running = False
         logger.log_info("Arrêt du bot demandé par l'utilisateur")
     
     def check_connection(self) -> bool:
-        """Vérifie la connexion à MT5"""
         try:
             if not mt5.initialize():
                 return False
@@ -93,7 +81,6 @@ class PairsTradingBot:
             return False
     
     def reconnect(self) -> bool:
-        """Tente de se reconnecter à MT5"""
         self.reconnection_attempts += 1
         
         if self.reconnection_attempts > MAX_RECONNECTION_ATTEMPTS:
@@ -123,13 +110,11 @@ class PairsTradingBot:
             return False
     
     def initialize(self) -> bool:
-        """Initialise le bot et se connecte à MT5"""
         print("=" * 70)
         print("📊 BOT DE STATISTICAL ARBITRAGE (PAIRS TRADING)")
         print("   XAUUSD / BTCUSD - Z-Score Strategy")
         print("=" * 70)
         
-        # Connexion à MT5
         print("🔌 Connexion à MetaTrader 5...")
         if not self.mt5_interface.connect():
             print("❌ Échec de la connexion à MT5")
@@ -137,7 +122,6 @@ class PairsTradingBot:
         
         print("✅ Connecté à MT5")
         
-        # Vérifier que les symboles sont disponibles
         print("🔍 Vérification des symboles...")
         symbols_to_check = [SYMBOL_GOLD, SYMBOL_BTC]
         for symbol in symbols_to_check:
@@ -148,7 +132,6 @@ class PairsTradingBot:
         
         account_info = mt5.account_info()
         if account_info:
-            # Message de démarrage Telegram
             start_msg = f"""
 🚀 **BOT ARBITRAGE DÉMARRÉ** 🚀
 💰 Balance : {account_info.balance:.2f} {account_info.currency}
@@ -165,7 +148,6 @@ LEV : 1:{account_info.leverage}
         return True
     
     def close_pairs_positions(self):
-        """Ferme toutes les positions de la paire"""
         try:
             gold_positions = self.mt5_interface.get_open_positions(symbol=SYMBOL_GOLD)
             btc_positions = self.mt5_interface.get_open_positions(symbol=SYMBOL_BTC)
@@ -180,7 +162,6 @@ LEV : 1:{account_info.leverage}
                 pnl_total += pos['profit']
                 self.mt5_interface.close_position(pos['ticket'])
                 
-            # Notification de fermeture
             if not gold_positions.empty or not btc_positions.empty:
                 self.send_telegram(f"🏁 **POSITIONS FERMÉES**\nP&L Total : {pnl_total:.2f} $")
 
@@ -188,22 +169,18 @@ LEV : 1:{account_info.leverage}
             logger.log_error(f"Erreur lors de la fermeture des positions: {e}")
     
     def execute_pairs_trade(self, signal: dict):
-        """Exécute un trade de paire (Gold + BTC simultanément)"""
         try:
-            # Vérifier le circuit breaker
             allowed, reason = self.risk_manager.should_allow_trade()
             if not allowed:
                 logger.log_error(f"Trading bloqué: {reason}")
                 return
             
-            # Vérifier positions existantes
             gold_positions = self.mt5_interface.get_open_positions(symbol=SYMBOL_GOLD)
             btc_positions = self.mt5_interface.get_open_positions(symbol=SYMBOL_BTC)
             
             if not gold_positions.empty or not btc_positions.empty:
                 return
             
-            # Calcul des tailles
             gold_price = signal['gold_price']
             btc_price = signal['btc_price']
             z_score = abs(signal['z_score'])
@@ -223,7 +200,6 @@ LEV : 1:{account_info.leverage}
             if gold_lots <= 0 or btc_lots <= 0:
                 return
             
-            # Récupération prix pour exécution
             gold_prices = self.mt5_interface.get_current_price(SYMBOL_GOLD)
             btc_prices = self.mt5_interface.get_current_price(SYMBOL_BTC)
             
@@ -233,7 +209,6 @@ LEV : 1:{account_info.leverage}
             gold_bid, gold_ask = gold_prices
             btc_bid, btc_ask = btc_prices
             
-            # Exécution des ordres
             gold_order_type = mt5.ORDER_TYPE_SELL if signal['gold_action'] == 'SELL' else mt5.ORDER_TYPE_BUY
             btc_order_type = mt5.ORDER_TYPE_SELL if signal['btc_action'] == 'SELL' else mt5.ORDER_TYPE_BUY
             
@@ -251,7 +226,6 @@ LEV : 1:{account_info.leverage}
             )
             
             if gold_ticket and btc_ticket:
-                # --- NOTIFICATION TELEGRAM D'EXECUTION ---
                 msg = f"""
 ⚡ **EXECUTION ARBITRAGE** ⚡
 📈 Z-Score : {signal['z_score']:.2f}
@@ -268,13 +242,8 @@ Lots : {btc_lots:.2f}
                 """
                 self.send_telegram(msg)
                 print(f"✅ Paire exécutée: Gold Ticket {gold_ticket}, BTC Ticket {btc_ticket}")
-                
-                # ... (Le reste de l'enregistrement trade ID et tracker reste identique) ...
-                # Je simplifie ici pour la lisibilité, mais ton code original de tracking est conservé
-                # dans la logique globale. L'important c'est que l'ordre est passé.
 
             else:
-                # Gestion d'échec partiel (fermeture de sécurité)
                 if gold_ticket and not btc_ticket:
                     self.mt5_interface.close_position(gold_ticket)
                     self.send_telegram("⚠️ **ERREUR EXECUTION** : Ordre BTC échoué, fermeture Gold.")
@@ -288,7 +257,6 @@ Lots : {btc_lots:.2f}
             self.consecutive_errors += 1
     
     def run(self):
-        """Boucle principale du bot avec reconnexion automatique"""
         if not self.initialize():
             return
         
@@ -302,10 +270,13 @@ Lots : {btc_lots:.2f}
         
         try:
             while self.running:
+                heure = datetime.now().strftime('%H:%M:%S')
+                current_z = getattr(self.strategy, 'last_zscore', 0.0)
+                print(f"[{heure}] 🔍 Scan... Z-Score: {current_z:.2f}", flush=True)
+
                 iteration += 1
                 current_time = time.time()
                 
-                # Check Connection
                 if current_time - self.last_connection_check >= CONNECTION_CHECK_INTERVAL:
                     self.last_connection_check = current_time
                     if not self.check_connection():
@@ -313,7 +284,6 @@ Lots : {btc_lots:.2f}
                         if not self.reconnect():
                             break
                 
-                # Circuit Breaker
                 circuit_breaker, reason_cb = self.risk_manager.check_circuit_breaker_pair()
                 if circuit_breaker:
                     msg = f"🛑 **CIRCUIT BREAKER ACTIVÉ** : {reason_cb}"
@@ -323,7 +293,6 @@ Lots : {btc_lots:.2f}
                     break
                 
                 try:
-                    # Logique Trading
                     should_close, close_reason = self.strategy.should_close_pairs_position()
                     if should_close:
                         print(f"🔄 Fermeture de la paire: {close_reason}")
@@ -334,7 +303,6 @@ Lots : {btc_lots:.2f}
                     if signal_data:
                         self.execute_pairs_trade(signal_data)
                     
-                    # Mise à jour Equity
                     risk_metrics = self.risk_manager.get_risk_metrics()
                     self.performance_tracker.update_equity(risk_metrics.get('equity', 0))
                     
@@ -358,7 +326,6 @@ Lots : {btc_lots:.2f}
             self.shutdown()
     
     def shutdown(self):
-        """Arrêt propre du bot"""
         print("🛑 ARRÊT DU BOT")
         self.mt5_interface.disconnect()
         logger.log_info("Bot arrêté")

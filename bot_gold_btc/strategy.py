@@ -255,8 +255,8 @@ class PairsTradingStrategy:
         """
         try:
             # Récupérer les données
-            df_gold = self.mt5_interface.get_rates(SYMBOL_GOLD, self.timeframe, count=RATIO_WINDOW + 10)
-            df_btc = self.mt5_interface.get_rates(SYMBOL_BTC, self.timeframe, count=RATIO_WINDOW + 10)
+            df_gold = self.mt5_interface.get_rates(SYMBOL_GOLD, self.timeframe, count=RATIO_WINDOW_DEFAULT + 10)
+            df_btc = self.mt5_interface.get_rates(SYMBOL_BTC, self.timeframe, count=RATIO_WINDOW_DEFAULT + 10)
             
             if df_gold is None or df_btc is None:
                 logger.log_error("Impossible de récupérer les données Gold/BTC")

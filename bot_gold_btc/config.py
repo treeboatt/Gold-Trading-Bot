@@ -7,11 +7,10 @@ Contient les identifiants de connexion et les paramètres de risque
 # Remplacez ces valeurs par vos propres identifiants
 MT5_LOGIN = 101181033  # Votre numéro de compte MT5
 MT5_PASSWORD = "5gW!FgVi"  # Votre mot de passe
-MT5_SERVER = "Broker-Server"  # Exemple: "MetaQuotes-Demo", "ICMarkets-Demo", etc.
-
+MT5_SERVER = "MetaQuotes-Demo"
 # ===== SYMBOLES DE TRADING =====
 SYMBOL_GOLD = "XAUUSD"  # Or
-SYMBOL_BTC = "BTCUSD"   # Bitcoin
+SYMBOL_BTC = "US500"
 SYMBOL_SP500 = "US500"  # S&P 500 (peut être SPX, US500 selon broker)
 SYMBOL_VIX = "VIX"      # VIX (peut nécessiter un broker spécifique)
 
